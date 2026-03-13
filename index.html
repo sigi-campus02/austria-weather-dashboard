@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>AustriaWeather Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Segoe UI, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #f5f5f5; }
+    h1 { color: #0078D4; }
+    select { padding: 8px; margin-bottom: 20px; font-size: 1rem; }
+    canvas { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+  <h1>☁️ AustriaWeather Dashboard</h1>
+  <select id="citySelect" onchange="loadData()">
+    <option value="Graz">Graz</option>
+    <option value="Wien">Wien</option>
+    <option value="Salzburg">Salzburg</option>
+  </select>
+  <canvas id="tempChart"></canvas>
+
+  <script>
+    const API = "https://func-austria-weather-sigi.azurewebsites.net/api/weather";
+    let chart = null;
+
+    async function loadData() {
+      const city = document.getElementById("citySelect").value;
+      const resp = await fetch(`${API}?city=${city}`);
+      const data = await resp.json();
+      const sorted = data.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+
+      if (chart) chart.destroy();
+      chart = new Chart(document.getElementById("tempChart"), {
+        type: "line",
+        data: {
+          labels: sorted.map(d => d.timestamp.substring(11, 16)),
+          datasets: [{
+            label: `Temperatur ${city} (°C)`,
+            data: sorted.map(d => d.temperature),
+            borderColor: "#0078D4",
+            backgroundColor: "rgba(0,120,212,0.1)",
+            tension: 0.3,
+            fill: true
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { position: "top" } } }
+      });
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
